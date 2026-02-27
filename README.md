@@ -1,8 +1,3 @@
-I AM NOT THE ORIGINAL AUTHOR. 
-
-I simply cloned the repo to mess with AI and see if it could update a plugin for Minecradt 1.21.11. 
-
-
 MushPoof
 ========
 
