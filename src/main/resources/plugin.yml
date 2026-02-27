@@ -1,9 +1,9 @@
 name: MushPoof
 main: se.jeremy.MushPoof
-author: enjikaka
+author: enjikaka and Shinobo via Stupid AI
 website: https://jeremy.se
 version: 4.1.6
-api-version: '1.13'
+api-version: '1.21'
 
 commands:
   mush:
