@@ -13,15 +13,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerJumpEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 public class MushPoof extends JavaPlugin implements Listener {
 	FileConfiguration config;
-	final double STILL = -0.0784000015258789;
-	boolean canJump = true;
 
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
@@ -59,7 +57,7 @@ public class MushPoof extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler
-	public void onPlayerMove(PlayerMoveEvent event) {
+	public void onPlayerJump(PlayerJumpEvent event) {
 		Player player = event.getPlayer();
 
 		if (config.getBoolean("goldenBoots") && !goldenBoots(player))
@@ -68,13 +66,16 @@ public class MushPoof extends JavaPlugin implements Listener {
 		World w = player.getWorld();
 		Location playerLocation = player.getLocation();
 		int x = playerLocation.getBlockX(), y = playerLocation.getBlockY(), z = playerLocation.getBlockZ();
-		Material blockBeneath = w.getBlockAt(x, y - 1, z).getType(), blockAbove = w.getBlockAt(x, y + 3, z).getType();
+		Material blockBeneath = w.getBlockAt(x, y - 1, z).getType();
+		Material blockAbove = w.getBlockAt(x, y + 3, z).getType();
 
 		if (isMushroomBlock(blockBeneath)) {
+			// Bounce the player
 			player.setFallDistance(0);
 
 			Vector dir = player.getLocation().getDirection();
-			double sp = config.getDouble("sidePoof"), hp = config.getDouble("heightPoof") * 1.0D;
+			double sp = config.getDouble("sidePoof");
+			double hp = config.getDouble("heightPoof");
 
 			if (player.isSprinting() && config.getBoolean("fasterWhenSprinting")) {
 				sp *= 1.5;
@@ -83,11 +84,9 @@ public class MushPoof extends JavaPlugin implements Listener {
 
 			dir = dir.multiply(sp);
 			dir.setY(hp);
+			player.setVelocity(dir);
 
-			if (player.getVelocity().getY() > STILL) {
-				player.setVelocity(dir);
-			}
-
+			// Sneak + jump on mushroom = drop down
 			Block landingBlockOne = w.getBlockAt(x, y - 3, z);
 			Block landingBlockTwo = w.getBlockAt(x, y - 2, z);
 
@@ -95,21 +94,18 @@ public class MushPoof extends JavaPlugin implements Listener {
 				playerLocation.setY(y - 3);
 				player.teleport(playerLocation);
 			}
+
 		} else if (isMushroomBlock(blockAbove)) {
+			// Elevator: mushroom 3 blocks above = teleport on top of it
 			Block landingBlockOne = w.getBlockAt(x, y + 4, z);
 			Block landingBlockTwo = w.getBlockAt(x, y + 5, z);
 
-			if (player.getVelocity().getY() > STILL && landingBlockOne.isPassable() && landingBlockTwo.isPassable()) {
-				canJump = false;
+			if (landingBlockOne.isPassable() && landingBlockTwo.isPassable()) {
 				playerLocation.setY(y + 4);
-
 				player.teleport(playerLocation);
 				player.setVelocity(new Vector(0, 0, 0));
-
-				canJump = true;
 			}
-		} else
-			return;
+		}
 	}
 
 	private boolean isMushroomBlock(Material m) {
